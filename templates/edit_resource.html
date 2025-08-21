@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h4 class="mb-0">Edit Resource</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_resource', resource_id=resource.id) }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Resource Name</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="name"
+                            name="name"
+                            value="{{ resource.name }}"
+                            required
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Resource Type</label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="">Select type</option>
+                            <option value="medical" {% if resource.type == 'medical' %}selected{% endif %}>Medical Supplies</option>
+                            <option value="food" {% if resource.type == 'food' %}selected{% endif %}>Food</option>
+                            <option value="water" {% if resource.type == 'water' %}selected{% endif %}>Water</option>
+                            <option value="shelter" {% if resource.type == 'shelter' %}selected{% endif %}>Shelter Materials</option>
+                            <option value="equipment" {% if resource.type == 'equipment' %}selected{% endif %}>Rescue Equipment</option>
+                            <option value="vehicle" {% if resource.type == 'vehicle' %}selected{% endif %}>Transport Vehicle</option>
+                            <option value="other" {% if resource.type == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="quantity"
+                            name="quantity"
+                            value="{{ resource.quantity }}"
+                            min="0"
+                            required
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Storage Location</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="location"
+                            name="location"
+                            value="{{ resource.location }}"
+                            required
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label for="expiry" class="form-label">Expiry Date (if applicable)</label>
+                        <input type="date" class="form-control" id="expiry" name="expiry" value="{{ resource.expiry }}" />
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning btn-lg">Update Resource</button>
+                        <a href="{{ url_for('resources') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,240 @@
+{% extends 'base.html' %} {% block title %}Volunteer Dashboard{% endblock %} {%
+block content %}
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Volunteer Dashboard</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-xl-6 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Recent Alerts
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ alerts|length }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-bell fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('manage_alerts') }}"
+            class="small text-warning stretched-link"
+            >View All Alerts</a
+          >
+          <div class="small text-warning">
+            <i class="fas fa-angle-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6 col-md-6 mb-4">
+      <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-danger text-uppercase mb-1"
+              >
+                Emergency Reports (Pending)
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ emergency_reports|length }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('dashboard') }}"
+            class="small text-danger stretched-link"
+            >View Emergency Reports</a
+          >
+          <div class="small text-danger">
+            <i class="fas fa-angle-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-warning">Latest Alerts</h6>
+        </div>
+        <div class="card-body">
+          {% if alerts %}
+          <div class="list-group">
+            {% for alert_tuple in alerts %} {% set alert_id = alert_tuple[0] %}
+            {% set alert = alert_tuple[1] %}
+            <a
+              href="#"
+              class="list-group-item list-group-item-action flex-column align-items-start"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ alert.message }}</h5>
+                <small>{{ alert.timestamp | datetimeformat }}</small>
+              </div>
+              <p class="mb-1">
+                Priority:
+                <span class="font-weight-bold"
+                  >{{ alert.priority|capitalize }}</span
+                >
+              </p>
+              <small>Sent by: {{ alert.sent_by_name }}</small>
+            </a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p>No recent alerts.</p>
+          {% endif %}
+          <div class="mt-3">
+            <a
+              href="{{ url_for('manage_alerts') }}"
+              class="small text-warning stretched-link"
+              >View All Alerts</a
+            >
+            <div class="small text-warning">
+              <i class="fas fa-angle-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-danger">
+            Emergency Reports Requiring Assistance
+          </h6>
+        </div>
+        <div class="card-body">
+          {% if emergency_reports %}
+          <div class="list-group">
+            {% for report_id, report in emergency_reports.items() %}
+            <a
+              href="#"
+              class="list-group-item list-group-item-action flex-column align-items-start"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                  {{ report.help_type | capitalize }} needed at {{
+                  report.location | capitalize }}
+                </h5>
+                <small>{{ report.timestamp | datetimeformat }}</small>
+              </div>
+              <p class="mb-1">
+                Severity:
+                <span class="font-weight-bold">{{ report.severity }}</span>
+              </p>
+              <small>Reported by: {{ report.user_name }}</small>
+            </a>
+            {% endfor %}
+          </div>
+          <div class="mt-3">
+            <a
+              href="{{ url_for('dashboard') }}"
+              class="small text-danger stretched-link"
+              >View All Emergency Reports</a
+            >
+            <div class="small text-danger">
+              <i class="fas fa-angle-right"></i>
+            </div>
+          </div>
+          {% else %}
+          <p>No pending emergency reports.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-info">
+            AI Predictions for Potential Needs
+          </h6>
+        </div>
+        <div class="card-body">
+          {% if predictions %}
+          <div class="table-responsive">
+            <table
+              class="table table-bordered"
+              id="predictionsTable"
+              width="100%"
+              cellspacing="0"
+            >
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Disaster</th>
+                  <th>Medical Kits</th>
+                  <th>Food Packets</th>
+                  <th>Shelter</th>
+                  <th>Volunteers</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for pred_id, prediction in
+                predictions.items()|dictsort(reverse=True)|slice(5) %}
+                <tr>
+                  <td>{{ prediction.prediction_source | capitalize }}</td>
+                  <td>
+                    {% if prediction.report_id %} Related to Report: {{
+                    prediction.report_id }} {% else %} {{
+                    prediction.disaster_type | capitalize }} (Sev {{
+                    prediction.severity }}) at {{ prediction.location |
+                    capitalize }} {% endif %}
+                  </td>
+                  <td>{{ prediction.medical_kits | default('-') }}</td>
+                  <td>{{ prediction.food_packets | default('-') }}</td>
+                  <td>{{ prediction.shelter_capacity | default('-') }}</td>
+                  <td>{{ prediction.volunteers_needed | default('-') }}</td>
+                  <td>{{ prediction.timestamp | datetimeformat }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2">
+            <a
+              href="{{ url_for('ai_predictions') }}"
+              class="small text-info stretched-link"
+              >View All Predictions</a
+            >
+            <div class="small text-info">
+              <i class="fas fa-angle-right"></i>
+            </div>
+          </div>
+          {% else %}
+          <p>No recent AI predictions available.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

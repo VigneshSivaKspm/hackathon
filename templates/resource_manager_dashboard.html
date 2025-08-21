@@ -1,0 +1,302 @@
+{% extends 'base.html' %} {% block title %}Resource Manager Dashboard{% endblock
+%} {% block content %}
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Resource Manager Dashboard</h1>
+  </div>
+
+  <!-- Dashboard Cards Row -->
+  <div class="row">
+    <!-- Total Resources Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-info text-uppercase mb-1"
+              >
+                Total Resources
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ resources|length }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-box-open fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('manage_resources') }}"
+            class="small text-info stretched-link"
+            >Manage Resources</a
+          >
+          <div class="small text-info"><i class="fas fa-angle-right"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Requests Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Pending Resource Requests
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ pending_reports|length }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('dashboard') }}"
+            class="small text-warning stretched-link"
+            >View Pending Reports</a
+          >
+          <div class="small text-warning">
+            <i class="fas fa-angle-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Predictions Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-success text-uppercase mb-1"
+              >
+                AI Resource Predictions (Recent)
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {% if predictions %}{{ predictions|length }}{% else %}0{% endif
+                %}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-lightbulb fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('ai_predictions') }}"
+            class="small text-success stretched-link"
+            >View All Predictions</a
+          >
+          <div class="small text-success">
+            <i class="fas fa-angle-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Row -->
+  <div class="row">
+    <!-- Resources Inventory Table -->
+    <div class="col-lg-8 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-info">
+            Current Resource Inventory
+          </h6>
+        </div>
+        <div class="card-body">
+          {% if resources %}
+          <div class="table-responsive">
+            <table
+              class="table table-bordered"
+              id="resourcesTable"
+              width="100%"
+              cellspacing="0"
+            >
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Quantity</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Expiry</th>
+                  <th>Last Updated</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for resource_id, resource in resources.items() %}
+                <tr>
+                  <td>{{ resource.name }}</td>
+                  <td>{{ resource.type }}</td>
+                  <td>{{ resource.quantity }}</td>
+                  <td>{{ resource.location }}</td>
+                  <td>{{ resource.status }}</td>
+                  <td>{{ resource.expiry if resource.expiry else '-' }}</td>
+                  <td>{{ resource.last_updated | datetimeformat }}</td>
+                  <td>
+                    <a
+                      href="{{ url_for('edit_resource', resource_id=resource_id) }}"
+                      class="btn btn-sm btn-info"
+                      >Edit</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p>No resources currently in the inventory.</p>
+          {% endif %}
+          <div class="mt-2">
+            <a
+              href="{{ url_for('manage_resources') }}"
+              class="btn btn-sm btn-success"
+              >Add New Resource</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-warning">
+            Pending Resource Requests
+          </h6>
+        </div>
+        <div class="card-body">
+          {% if pending_reports %}
+          <div class="list-group">
+            {% for report in pending_reports %}
+            <a
+              href="#"
+              class="list-group-item list-group-item-action flex-column align-items-start"
+            >
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                  {{ report[1].help_type | capitalize }} needed at {{
+                  report[1].location | capitalize }}
+                </h5>
+                <small>
+                  {% if report[1].timestamp %} {{ report[1].timestamp |
+                  datetimeformat('%Y-%m-%d %H:%M:%S') }} {% else %} N/A {% endif
+                  %}
+                </small>
+              </div>
+              <p class="mb-1">
+                Severity:
+                <span class="font-weight-bold">{{ report[1].severity }}</span>
+              </p>
+              <small>Reported by: {{ report[1].user_name }}</small>
+            </a>
+            {% endfor %}
+          </div>
+          <div class="mt-3">
+            <a
+              href="{{ url_for('dashboard') }}"
+              class="small text-warning stretched-link"
+              >View All Pending Reports</a
+            >
+            <div class="small text-warning">
+              <i class="fas fa-angle-right"></i>
+            </div>
+          </div>
+          {% else %}
+          <p>No pending resource requests.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Predictions Table -->
+  <div class="row">
+    <div class="col-lg-12 mb-4">
+      <div class="card shadow">
+        <div class="card-header bg-warning text-white">
+          <h5 class="mb-0">Resource Summary</h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-4">
+              <h3>{{ resources.values()|sum(attribute='quantity') }}</h3>
+              <p class="text-muted">Total Items</p>
+            </div>
+            <div class="col-4">
+              <h3>
+                {{ resources.values()|selectattr('type', 'equalto',
+                'medical')|sum(attribute='quantity') }}
+              </h3>
+              <p class="text-muted">Medical</p>
+            </div>
+            <div class="col-4">
+              <h3>
+                {{ resources.values()|selectattr('type', 'equalto',
+                'food')|sum(attribute='quantity') }}
+              </h3>
+              <p class="text-muted">Food</p>
+            </div>
+            <div class="col-4">
+              <h3>
+                {{ resources.values()|selectattr('type', 'equalto',
+                'equipment')|sum(attribute='quantity') }}
+              </h3>
+              <p class="text-muted">Rescue Equipment</p>
+            </div>
+            <div class="col-4">
+              <h3>
+                {{ resources.values()|selectattr('type', 'equalto',
+                'water')|sum(attribute='quantity') }}
+              </h3>
+              <p class="text-muted">Water</p>
+            </div>
+            <div class="col-4">
+              <h3>
+                {{ resources.values()|selectattr('type', 'equalto',
+                'shelter')|sum(attribute='quantity') }}
+              </h3>
+              <p class="text-muted">Shelter Materials</p>
+            </div>
+            <div class="col-4">
+              <h3>
+                {{ resources.values()|selectattr('type', 'equalto',
+                'vehicle')|sum(attribute='quantity') }}
+              </h3>
+              <p class="text-muted">Transport Vehicles</p>
+            </div>
+            <div class="col-4">
+              <h3>
+                {{ resources.values()|selectattr('type', 'equalto',
+                'others')|sum(attribute='quantity') }}
+              </h3>
+              <p class="text-muted">Others</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+</div>

@@ -1,0 +1,257 @@
+{% extends "base.html" %} {% block content %}
+<div class="row">
+  {% if session.user.role in ['admin', 'resource_manager'] %}
+  <div class="col-md-4">
+    <div class="card shadow mb-4">
+      <div class="card-header bg-warning text-white">
+        <h5 class="mb-0">Add New Resource</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('manage_resources') }}">
+          <div class="mb-3">
+            <label for="name" class="form-label">Resource Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="type" class="form-label">Resource Type</label>
+            <select class="form-select" id="type" name="type" required>
+              <option value="">Select type</option>
+              <option value="medical">Medical Supplies</option>
+              <option value="food">Food</option>
+              <option value="water">Water</option>
+              <option value="shelter">Shelter Materials</option>
+              <option value="equipment">Rescue Equipment</option>
+              <option value="vehicle">Transport Vehicle</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="quantity" class="form-label">Quantity</label>
+            <input
+              type="number"
+              class="form-control"
+              id="quantity"
+              name="quantity"
+              min="1"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="location" class="form-label">Storage Location</label>
+            <input
+              type="text"
+              class="form-control"
+              id="location"
+              name="location"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="expiry" class="form-label"
+              >Expiry Date (if applicable)</label
+            >
+            <input type="date" class="form-control" id="expiry" name="expiry" />
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-warning">Add Resource</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow">
+      <div class="card-header bg-warning text-white">
+        <h5 class="mb-0">Resource Summary</h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-4">
+            <h3>{{ resources.values()|sum(attribute='quantity') }}</h3>
+            <p class="text-muted">Total Items</p>
+          </div>
+          <div class="col-4">
+            <h3>
+              {{ resources.values()|selectattr('type', 'equalto',
+              'medical')|sum(attribute='quantity') }}
+            </h3>
+            <p class="text-muted">Medical</p>
+          </div>
+          <div class="col-4">
+            <h3>
+              {{ resources.values()|selectattr('type', 'equalto',
+              'food')|sum(attribute='quantity') }}
+            </h3>
+            <p class="text-muted">Food</p>
+          </div>
+          <div class="col-4">
+            <h3>
+              {{ resources.values()|selectattr('type', 'equalto',
+              'equipment')|sum(attribute='quantity') }}
+            </h3>
+            <p class="text-muted">Rescue Equipment</p>
+          </div>
+          <div class="col-4">
+            <h3>
+              {{ resources.values()|selectattr('type', 'equalto',
+              'water')|sum(attribute='quantity') }}
+            </h3>
+            <p class="text-muted">Water</p>
+          </div>
+          <div class="col-4">
+            <h3>
+              {{ resources.values()|selectattr('type', 'equalto',
+              'shelter')|sum(attribute='quantity') }}
+            </h3>
+            <p class="text-muted">Shelter Materials</p>
+          </div>
+          <div class="col-4">
+            <h3>
+              {{ resources.values()|selectattr('type', 'equalto',
+              'vehicle')|sum(attribute='quantity') }}
+            </h3>
+            <p class="text-muted">Transport Vehicles</p>
+          </div>
+          <div class="col-4">
+            <h3>
+              {{ resources.values()|selectattr('type', 'equalto',
+              'others')|sum(attribute='quantity') }}
+            </h3>
+            <p class="text-muted">Others</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card shadow">
+      <div class="card-header bg-warning text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Resource Inventory</h5>
+          <div>
+            <button class="btn btn-sm btn-light">Export Data</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Resource</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for resource_id, resource in resources.items() %}
+              <tr>
+                <td>{{ resource.name }}</td>
+                <td>{{ resource.type|title }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{ 'danger' if resource.quantity < 10 else 'success' }}"
+                  >
+                    {{ resource.quantity }}
+                  </span>
+                </td>
+                <td>{{ resource.location }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{ 'success' if resource.status == 'available' else 'warning' }}"
+                  >
+                    {{ resource.status|title }}
+                  </span>
+                </td>
+                <td>
+                  <a
+                    href="{{ url_for('edit_resource', resource_id=resource_id) }}"
+                    class="btn btn-sm btn-outline-warning"
+                    >Edit</a
+                  >
+                  <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% elif 'user' in session %}
+  <div class="col-md-12">
+    <div class="alert alert-info" role="alert">
+      You do not have permission to manage resources. Please contact an
+      administrator or resource manager if you need to make changes.
+    </div>
+    <div class="card shadow">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Resource Inventory</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Resource</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Location</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for resource_id, resource in resources.items() %}
+              <tr>
+                <td>{{ resource.name }}</td>
+                <td>{{ resource.type|title }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{ 'danger' if resource.quantity < 10 else 'success' }}"
+                  >
+                    {{ resource.quantity }}
+                  </span>
+                </td>
+                <td>{{ resource.location }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{ 'success' if resource.status == 'available' else 'warning' }}"
+                  >
+                    {{ resource.status|title }}
+                  </span>
+                </td>
+                <td>
+                  <a
+                    href="{{ url_for('edit_resource', resource_id=resource_id) }}"
+                    class="btn btn-sm btn-outline-warning"
+                    >Edit</a
+                  >
+                  <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-md-12">
+    <div class="alert alert-warning" role="alert">
+      Please log in to view resource information.
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

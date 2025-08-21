@@ -1,0 +1,115 @@
+{% extends "base.html" %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow">
+      <div class="card-header bg-danger text-white">
+        <h4 class="mb-0">Report an Emergency Situation</h4>
+      </div>
+      <div class="card-body">
+        <p class="lead mb-3">
+          Please provide details about the emergency you are reporting. Your
+          information will help us understand the situation and allocate
+          resources effectively.
+        </p>
+        <form method="POST" action="{{ url_for('report') }}">
+          <div class="mb-3">
+            <label for="location" class="form-label"
+              >Location of Emergency</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="location"
+              name="location"
+              required
+            />
+            <small class="text-muted">Enter address, city, or landmark</small>
+          </div>
+          <div class="mb-3">
+            <label for="help_type" class="form-label">Type of Emergency</label>
+            <select
+              class="form-select"
+              id="help_type"
+              name="help_type"
+              required
+            >
+              <option value="">Select emergency type</option>
+              <option value="medical">Medical Emergency</option>
+              <option value="food">Food Shortage</option>
+              <option value="water">Water Shortage</option>
+              <option value="shelter">Need Shelter</option>
+              <option value="rescue">Rescue Needed</option>
+              <option value="fire">Fire</option>
+              <option value="flood">Flood</option>
+              <option value="earthquake">Earthquake</option>
+              <option value="other">Other Emergency</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="severity" class="form-label">Severity Level</label>
+            <select class="form-select" id="severity" name="severity" required>
+              <option value="1">Low - Minor incident</option>
+              <option value="2">Medium - Significant impact</option>
+              <option value="3">High - Life-threatening</option>
+              <option value="4">Critical - Multiple lives at risk</option>
+              <option value="5">Catastrophic - Large-scale emergency</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label"
+              >Description of Situation</label
+            >
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              rows="3"
+              required
+            ></textarea>
+            <small class="text-muted"
+              >Please provide details about what is happening.</small
+            >
+          </div>
+          <div class="mb-3">
+            <label for="population_density" class="form-label"
+              >Population Density in Affected Area</label
+            >
+            <select
+              class="form-select"
+              id="population_density"
+              name="population_density"
+              required
+            >
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="contact" class="form-label"
+              >Your Contact Information (Optional)</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="contact"
+              name="contact"
+              placeholder="Phone number or email"
+            />
+            <small class="text-muted"
+              >Providing contact info helps responders follow up if
+              needed.</small
+            >
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-danger btn-lg">
+              <i class="fas fa-exclamation-triangle me-2"></i> Submit Emergency
+              Report
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

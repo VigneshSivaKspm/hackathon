@@ -1,0 +1,147 @@
+{% extends "base.html" %} {% block content %}
+<div class="row">
+  {% if session.user.role == 'admin' %}
+  <div class="col-md-4">
+    <div class="card shadow mb-4">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">Send New Alert</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('send_alert') }}">
+          <div class="mb-3">
+            <label for="message" class="form-label">Alert Message</label>
+            <textarea
+              class="form-control"
+              id="message"
+              name="message"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="priority" class="form-label">Priority Level</label>
+            <select class="form-select" id="priority" name="priority" required>
+              <option value="low">Low Priority</option>
+              <option value="medium" selected>Medium Priority</option>
+              <option value="high">High Priority</option>
+              <option value="critical">Critical Alert</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="target" class="form-label">Target Audience</label>
+            <select class="form-select" id="target" name="target" required>
+              <option value="all">All Users</option>
+              <option value="volunteer">Volunteers Only</option>
+              <option value="resource_manager">Resource Managers</option>
+            </select>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-danger">
+              <i class="fas fa-bell me-2"></i> Send Alert
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card shadow">
+      <div class="card-header bg-danger text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Alert History</h5>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Message</th>
+                <th>Priority</th>
+                <th>Target</th>
+                <th>Sent By</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alert_id, alert in alerts|dictsort(reverse=True) %}
+              <tr>
+                <td>{{ alert.message|truncate(50) }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{
+                                            'danger' if alert.priority == 'critical' else
+                                            'warning' if alert.priority == 'high' else
+                                            'info' if alert.priority == 'medium' else
+                                            'secondary'
+                                        }}"
+                  >
+                    {{ alert.priority|title }}
+                  </span>
+                </td>
+                <td>{{ alert.target|title }}</td>
+                <td>{{ alert.sent_by_name }}</td>
+                <td>{{ alert.timestamp|datetimeformat }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% elif 'user' in session %}
+  <div class="col-md-12">
+    <div class="card shadow">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Alert History</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Message</th>
+                <th>Priority</th>
+                <th>Target</th>
+                <th>Sent By</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alert_id, alert in
+              alerts.items()|dictsort(attribute='timestamp', reverse=True) %}
+              <tr>
+                <td>{{ alert.message|truncate(50) }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{
+                                            'danger' if alert.priority == 'critical' else
+                                            'warning' if alert.priority == 'high' else
+                                            'info' if alert.priority == 'medium' else
+                                            'secondary'
+                                        }}"
+                  >
+                    {{ alert.priority|title }}
+                  </span>
+                </td>
+                <td>{{ alert.target|title }}</td>
+                <td>{{ alert.sent_by_name }}</td>
+                <td>{{ alert.timestamp|datetimeformat }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-md-12">
+    <div class="alert alert-warning" role="alert">
+      Please log in to view alerts.
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

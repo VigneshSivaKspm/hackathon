@@ -1,0 +1,306 @@
+{% extends "base.html" %} {% block content %}
+<div class="row mb-4">
+  <div class="col-md-12">
+    <h2>Disaster Dashboard</h2>
+    <p class="lead">Welcome, {{ user.name }} ({{ user.role|title }})!</p>
+    <hr class="my-4" />
+  </div>
+</div>
+
+{% if user.role == 'admin' %}
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5>Recent Reports & AI Predictions</h5>
+      </div>
+      <div class="card-body">
+        {% if reports %}
+        <ul class="list-group list-group-flush">
+          {% for report_id, report in reports.items()|dictsort(reverse=True) %}
+          <li class="list-group-item">
+            <h6>{{ report.help_type|title }} in {{ report.location }}</h6>
+            <small class="text-muted"
+              >Reported on: {{ report.timestamp|datetimeformat }}</small
+            ><br />
+            Severity: <span class="badge bg-danger">{{ report.severity }}</span>
+            {% if dashboard_predictions[report_id] %}
+            <div class="mt-2">
+              <strong>AI Prediction:</strong>
+              Medical Kits:
+              <span class="badge bg-info"
+                >{{ dashboard_predictions[report_id].medical_kits }}</span
+              >
+              Food Packets:
+              <span class="badge bg-warning"
+                >{{ dashboard_predictions[report_id].food_packets }}</span
+              >
+              Shelter Capacity:
+              <span class="badge bg-success"
+                >{{ dashboard_predictions[report_id].shelter_capacity }}</span
+              >
+            </div>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p>No recent reports.</p>
+        {% endif %}
+        <div class="mt-2">
+          <a href="/report" class="btn btn-sm btn-outline-primary"
+            >View All Reports</a
+          >
+          <a href="/ai_predictions" class="btn btn-sm btn-outline-info"
+            >View All Predictions</a
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-success text-white">
+        <h5>Volunteer Overview</h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-6">
+            <h3>{{ volunteers|length }}</h3>
+            <p>Total Volunteers</p>
+          </div>
+          <div class="col-md-6">
+            <a href="/volunteers" class="btn btn-sm btn-outline-success"
+              >View All Volunteers</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-4">
+      <div class="card-header bg-warning text-dark">
+        <h5>Recent Alerts</h5>
+      </div>
+      <div class="card-body">
+        {% if alerts %}
+        <ul class="list-group list-group-flush">
+          {% for alert_id, alert in
+          alerts.items()|dictsort(attribute='timestamp', reverse=True) %}
+          <li class="list-group-item">
+            <strong>{{ alert.message }}</strong>
+            <br />
+            <small class="text-muted"
+              >Sent by {{ alert.sent_by_name }} on {{
+              alert.timestamp|datetimeformat }}</small
+            >
+            <span class="badge bg-secondary float-end"
+              >{{ alert.priority|title }}</span
+            >
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="mt-2">
+          <a href="/alerts" class="btn btn-sm btn-outline-warning"
+            >View All Alerts</a
+          >
+        </div>
+        {% else %}
+        <p>No recent alerts.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% elif user.role == 'resource_manager' %}
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-info text-white">
+        <h5>Available Resources</h5>
+      </div>
+      <div class="card-body">
+        {% if resources %}
+        <ul class="list-group list-group-flush">
+          {% for resource_id, resource in resources.items() %}
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            {{ resource.name }} ({{ resource.type|title }}) - {{
+            resource.location }}
+            <span class="badge bg-primary rounded-pill"
+              >{{ resource.quantity }}</span
+            >
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="mt-2">
+          <a href="/resources" class="btn btn-sm btn-outline-info"
+            >Manage Resources</a
+          >
+        </div>
+        {% else %}
+        <p>No resources available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-warning text-dark">
+        <h5>Pending Resource Requests (from Reports)</h5>
+      </div>
+      <div class="card-body">
+        {% if pending_reports %}
+        <ul class="list-group list-group-flush">
+          {% for report_id, report in pending_reports.items() %}
+          <li class="list-group-item">
+            <h6>
+              {{ report.help_type|title }} in {{ report.location }} (Severity:
+              {{ report.severity }})
+            </h6>
+            <small class="text-muted"
+              >Reported on: {{ report.timestamp|datetimeformat }}</small
+            >
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="mt-2">
+          Review these reports to allocate necessary resources.
+        </p>
+        {% else %}
+        <p>No pending resource requests.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% elif user.role == 'volunteer' %}
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-danger text-white">
+        <h5>Emergency Reports Needing Assistance</h5>
+      </div>
+      <div class="card-body">
+        {% if emergency_reports %}
+        <ul class="list-group list-group-flush">
+          {% for report_id, report in emergency_reports.items() %}
+          <li class="list-group-item">
+            <h6>{{ report.help_type|title }} in {{ report.location }}</h6>
+            <small class="text-muted"
+              >Reported on: {{ report.timestamp|datetimeformat }}</small
+            ><br />
+            Severity: <span class="badge bg-danger">{{ report.severity }}</span>
+            <p>{{ report.description|truncate(100) }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p>No emergencies reported requiring immediate assistance.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-warning text-dark">
+        <h5>Recent Alerts</h5>
+      </div>
+      <div class="card-body">
+        {% if alerts %}
+        <ul class="list-group list-group-flush">
+          {% for alert_id, alert in
+          alerts.items()|dictsort(attribute='timestamp', reverse=True) %}
+          <li class="list-group-item">
+            <strong>{{ alert.message }}</strong>
+            <br />
+            <small class="text-muted"
+              >Sent by {{ alert.sent_by_name }} on {{
+              alert.timestamp|datetimeformat }}</small
+            >
+            <span class="badge bg-secondary float-end"
+              >{{ alert.priority|title }}</span
+            >
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="mt-2">
+          <a href="/alerts" class="btn btn-sm btn-outline-warning"
+            >View All Alerts</a
+          >
+        </div>
+        {% else %}
+        <p>No recent alerts.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% elif user.role == 'affected' %}
+<div class="row">
+  <div class="col-md-6 offset-md-3">
+    <div class="card">
+      <div class="card-header bg-info text-white">
+        <h5>Report a New Incident</h5>
+      </div>
+      <div class="card-body text-center">
+        <p>Please provide details about the incident you are reporting.</p>
+        <a href="/report" class="btn btn-danger btn-lg">Report Incident</a>
+      </div>
+    </div>
+    {% if reports %}
+    <div class="card mt-4">
+      <div class="card-header">
+        <h5>Your Submitted Reports</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          {% for report_id, report in
+          reports.items()|dictsort(attribute='timestamp', reverse=True) %}
+          <li class="list-group-item">
+            <h6>{{ report.help_type|title }} in {{ report.location }}</h6>
+            <small class="text-muted"
+              >Reported on: {{ report.timestamp|datetimeformat }}</small
+            ><br />
+            Severity:
+            <span class="badge bg-warning">{{ report.severity }}</span> Status:
+            <span class="badge bg-secondary">{{ report.status|title }}</span>
+            <p>{{ report.description|truncate(100) }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="alert alert-info" role="alert">
+      Welcome to the Disaster Management System dashboard. Your role is
+      currently {{ user.role|title }}. Depending on your role, you will see
+      different information and options here.
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h5>General Information</h5>
+      </div>
+      <div class="card-body">
+        <p>
+          This is a general dashboard view. Specific features and data will be
+          available based on your user role.
+        </p>
+        <p>
+          You can <a href="/profile">view your profile</a> or
+          <a href="/report">report a new incident</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %} {% endblock %}

@@ -1,0 +1,499 @@
+{% extends "base.html" %} {% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card shadow mb-4">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">AI Prediction Dashboard</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-header">
+                <h6>Predict Resource Needs</h6>
+              </div>
+              <div class="card-body">
+                <form id="predictionForm">
+                  <div class="mb-3">
+                    <label for="predictLocation" class="form-label"
+                      >Location</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="predictLocation"
+                      required
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="disasterType" class="form-label"
+                      >Disaster Type</label
+                    >
+                    <select class="form-select" id="disasterType" required>
+                      <option value="earthquake">Earthquake</option>
+                      <option value="flood">Flood</option>
+                      <option value="hurricane">Hurricane</option>
+                      <option value="fire">Wildfire</option>
+                      <option value="tsunami">Tsunami</option>
+                      <option value="tornado">Tornado</option>
+                      <option value="drought">Drought</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="severityLevel" class="form-label"
+                      >Expected Severity</label
+                    >
+                    <select class="form-select" id="severityLevel" required>
+                      {% for i in range(1, 11) %}
+                      <option value="{{ i }}">
+                        Level {{ i }} ({{ ['Minor', 'Moderate', 'Serious',
+                        'Severe', 'Critical', 'Extreme', 'Major', 'Disastrous',
+                        'Catastrophic', 'Apocalyptic'][i-1] }})
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="populationDensity" class="form-label"
+                      >Population Density</label
+                    >
+                    <select class="form-select" id="populationDensity" required>
+                      <option value="rural">Rural</option>
+                      <option value="low">Low</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="high">High</option>
+                      <option value="urban">Urban</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-success">
+                    Generate Predictions
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6>Prediction Results</h6>
+              </div>
+              <div class="card-body">
+                <div id="predictionResults" class="text-center py-4">
+                  {% if latest_prediction %}
+                  <h5>{{ latest_prediction.location }}</h5>
+                  <p>
+                    Predicted needs for {{
+                    latest_prediction.disaster_type|capitalize }} (Severity {{
+                    latest_prediction.severity }})
+                  </p>
+                  {% else %}
+                  <p class="text-muted">
+                    Submit the form to see AI predictions or view predictions
+                    from user reports.
+                  </p>
+                  {% endif %}
+                </div>
+                <div class="row text-center mt-3">
+                  <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                      <h5 id="medicalPrediction">
+                        {% if latest_prediction %} {{
+                        latest_prediction.medical_kits|int|default('-')|toLocaleString
+                        }} {% else %} - {% endif %}
+                      </h5>
+                      <p class="mb-0">Medical Kits</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                      <h5 id="foodPrediction">
+                        {% if latest_prediction %} {{
+                        latest_prediction.food_packets|int|default('-')|toLocaleString
+                        }} {% else %} - {% endif %}
+                      </h5>
+                      <p class="mb-0">Food Packets</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="p-3 bg-light rounded">
+                      <h5 id="shelterPrediction">
+                        {% if latest_prediction %} {{
+                        latest_prediction.shelter_capacity|int|default('-')|toLocaleString
+                        }} {% else %} - {% endif %}
+                      </h5>
+                      <p class="mb-0">Shelter Capacity</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="row text-center mt-3">
+                  <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                      <h5 id="volunteerPrediction">
+                        {% if latest_prediction %} {{
+                        latest_prediction.volunteers_needed|int|default('-')|toLocaleString
+                        }} {% else %} - {% endif %}
+                      </h5>
+                      <p class="mb-0">Volunteers Needed</p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                      <h5 id="aiSource">
+                        {% if latest_prediction %} {{
+                        latest_prediction.prediction_source|default('Manual
+                        Input')|capitalize }} {% else %} - {% endif %}
+                      </h5>
+                      <p class="mb-0">Prediction Source</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h6>Historical Predictions vs Predicted Now</h6>
+          </div>
+          <div class="card-body">
+            <canvas id="predictionChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h6>Historical Predictions Data</h6>
+          </div>
+          <div class="card-body">
+            {% if predictions %}
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Source</th>
+                    <th>Location</th>
+                    <th>Disaster Type</th>
+                    <th>Severity</th>
+                    <th>Population Density</th>
+                    <th>Medical Kits</th>
+                    <th>Food Packets</th>
+                    <th>Shelter Capacity</th>
+                    <th>Volunteers Needed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for prediction in predictions %}
+                  <tr>
+                    <td>{{ prediction.timestamp | datetimeformat }}</td>
+                    <td>{{ prediction.prediction_source|capitalize }}</td>
+                    <td>{{ prediction.location }}</td>
+                    <td>{{ prediction.disaster_type | capitalize }}</td>
+                    <td>{{ prediction.severity }}</td>
+                    <td>{{ prediction.population_density | capitalize }}</td>
+                    <td>
+                      {{ prediction.medical_kits|int|default('-')|toLocaleString
+                      }}
+                    </td>
+                    <td>
+                      {{ prediction.food_packets|int|default('-')|toLocaleString
+                      }}
+                    </td>
+                    <td>
+                      {{
+                      prediction.shelter_capacity|int|default('-')|toLocaleString
+                      }}
+                    </td>
+                    <td>
+                      {{
+                      prediction.volunteers_needed|int|default('-')|toLocaleString
+                      }}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No historical predictions available yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  // Handle prediction form submission
+  document
+    .getElementById("predictionForm")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Predicting...';
+
+      const location = document.getElementById("predictLocation").value;
+      const disasterType = document.getElementById("disasterType").value;
+      const severity = document.getElementById("severityLevel").value;
+      const density = document.getElementById("populationDensity").value;
+
+      try {
+        const response = await fetch("/ai/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            location: location,
+            disaster_type: disasterType,
+            severity: severity,
+            population_density: density,
+            prediction_source: "manual_input", // Mark as manual input
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // Update UI with predictions
+        document.getElementById("medicalPrediction").textContent =
+          data.medical_kits ? data.medical_kits.toLocaleString() : "-";
+        document.getElementById("foodPrediction").textContent =
+          data.food_packets ? data.food_packets.toLocaleString() : "-";
+        document.getElementById("shelterPrediction").textContent =
+          data.shelter_capacity ? data.shelter_capacity.toLocaleString() : "-";
+        document.getElementById("volunteerPrediction").textContent =
+          data.volunteers_needed
+            ? data.volunteers_needed.toLocaleString()
+            : "-";
+        document.getElementById("aiSource").textContent = "Manual Input";
+
+        document.getElementById("predictionResults").innerHTML = `
+                                        <div class="alert alert-success">
+                                            <h5>${location}</h5>
+                                            <p>Predicted needs for ${disasterType} (Severity ${severity})</p>
+                                        </div>
+                                    `;
+
+        // Update chart with the new prediction
+        updateChart(data);
+
+        // Show success toast
+        showToast("Prediction generated successfully!", "success");
+
+        // Optionally reload the page to show new prediction in history
+        // setTimeout(() => {
+        //     location.reload();
+        // }, 1500);
+      } catch (error) {
+        console.error("Prediction error:", error);
+        document.getElementById("predictionResults").innerHTML = `
+                                        <div class="alert alert-danger">
+                                            <strong>Prediction failed:</strong> ${
+                                              error.message ||
+                                              "Unknown error occurred"
+                                            }
+                                        </div>
+                                    `;
+        showToast("Prediction failed!", "danger");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Generate Predictions";
+      }
+    });
+
+  // Initialize chart with empty data
+  const ctx = document.getElementById("predictionChart").getContext("2d");
+  const chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [
+        "Medical Kits",
+        "Food Packets",
+        "Shelter Capacity",
+        "Volunteers",
+      ],
+      datasets: [
+        {
+          label: "Latest Prediction",
+          backgroundColor: "#28a745",
+          data: [0, 0, 0, 0],
+        },
+        {
+          label: "Historical Average",
+          backgroundColor: "#17a2b8",
+          data: [0, 0, 0, 0],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "top",
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `${
+                context.dataset.label
+              }: ${context.raw.toLocaleString()}`;
+            },
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              return value.toLocaleString();
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Function to update chart with current and historical data
+  function updateChart(currentPrediction) {
+    // Update current prediction data
+    chart.data.datasets[0].data = [
+      currentPrediction.medical_kits || 0,
+      currentPrediction.food_packets || 0,
+      currentPrediction.shelter_capacity || 0,
+      currentPrediction.volunteers_needed || 0,
+    ];
+
+    // Calculate historical averages from the table data
+    const tableRows = document.querySelectorAll("table tbody tr");
+    if (tableRows.length > 0) {
+      let totalMedical = 0;
+      let totalFood = 0;
+      let totalShelter = 0;
+      let totalVolunteers = 0;
+
+      tableRows.forEach((row) => {
+        totalMedical +=
+          parseInt(row.cells[6].textContent.replace(/,/g, "")) || 0;
+        totalFood += parseInt(row.cells[7].textContent.replace(/,/g, "")) || 0;
+        totalShelter +=
+          parseInt(row.cells[8].textContent.replace(/,/g, "")) || 0;
+        totalVolunteers +=
+          parseInt(row.cells[9].textContent.replace(/,/g, "")) || 0;
+      });
+
+      const avgMedical = Math.round(totalMedical / tableRows.length);
+      const avgFood = Math.round(totalFood / tableRows.length);
+      const avgShelter = Math.round(totalShelter / tableRows.length);
+      const avgVolunteers = Math.round(totalVolunteers / tableRows.length);
+
+      chart.data.datasets[1].data = [
+        avgMedical,
+        avgFood,
+        avgShelter,
+        avgVolunteers,
+      ];
+    }
+
+    chart.update();
+  }
+
+  // Initialize chart with existing data on page load
+  document.addEventListener("DOMContentLoaded", function () {
+    // If we have predictions in the table, initialize the chart
+    const tableRows = document.querySelectorAll("table tbody tr");
+    if (tableRows.length > 0) {
+      // Get the most recent prediction from the first row
+      const latestMedical =
+        parseInt(tableRows[0].cells[6].textContent.replace(/,/g, "")) || 0;
+      const latestFood =
+        parseInt(tableRows[0].cells[7].textContent.replace(/,/g, "")) || 0;
+      const latestShelter =
+        parseInt(tableRows[0].cells[8].textContent.replace(/,/g, "")) || 0;
+      const latestVolunteers =
+        parseInt(tableRows[0].cells[9].textContent.replace(/,/g, "")) || 0;
+
+      // Update current prediction data
+      chart.data.datasets[0].data = [
+        latestMedical,
+        latestFood,
+        latestShelter,
+        latestVolunteers,
+      ];
+
+      // Calculate historical averages
+      let totalMedical = 0;
+      let totalFood = 0;
+      let totalShelter = 0;
+      let totalVolunteers = 0;
+
+      tableRows.forEach((row) => {
+        totalMedical +=
+          parseInt(row.cells[6].textContent.replace(/,/g, "")) || 0;
+        totalFood += parseInt(row.cells[7].textContent.replace(/,/g, "")) || 0;
+        totalShelter +=
+          parseInt(row.cells[8].textContent.replace(/,/g, "")) || 0;
+        totalVolunteers +=
+          parseInt(row.cells[9].textContent.replace(/,/g, "")) || 0;
+      });
+
+      const avgMedical = Math.round(totalMedical / tableRows.length);
+      const avgFood = Math.round(totalFood / tableRows.length);
+      const avgShelter = Math.round(totalShelter / tableRows.length);
+      const avgVolunteers = Math.round(totalVolunteers / tableRows.length);
+
+      chart.data.datasets[1].data = [
+        avgMedical,
+        avgFood,
+        avgShelter,
+        avgVolunteers,
+      ];
+
+      chart.update();
+    }
+  });
+
+  // Toast notification function
+  function showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+    toast.setAttribute("role", "alert");
+    toast.setAttribute("aria-live", "assertive");
+    toast.setAttribute("aria-atomic", "true");
+    toast.style.zIndex = "1100";
+
+    toast.innerHTML = `
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        `;
+
+    document.body.appendChild(toast);
+
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    // Remove toast after it hides
+    toast.addEventListener("hidden.bs.toast", function () {
+      toast.remove();
+    });
+  }
+</script>
+{% endblock %}

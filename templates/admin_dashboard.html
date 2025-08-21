@@ -1,0 +1,280 @@
+{% extends 'base.html' %} {% block title %}Admin Dashboard{% endblock %} {%
+block content %}
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Admin Dashboard</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-danger text-uppercase mb-1"
+              >
+                Disaster Reports (Pending)
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ reports|length }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('report') }}"
+            class="small text-danger stretched-link"
+            >View Reports</a
+          >
+          <div class="small text-danger">
+            <i class="fas fa-angle-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-success text-uppercase mb-1"
+              >
+                Registered Volunteers
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ volunteers|length }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-users fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('volunteers_list') }}"
+            class="small text-success stretched-link"
+            >Manage Volunteers</a
+          >
+          <div class="small text-success">
+            <i class="fas fa-angle-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-info text-uppercase mb-1"
+              >
+                Available Resources
+              </div>
+              <div class="row no-gutters align-items-center">
+                <div class="col-auto">
+                  <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
+                    {{ resources_count if resources_count is defined else '-' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-box-open fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('manage_resources') }}"
+            class="small text-info stretched-link"
+            >Manage Resources</a
+          >
+          <div class="small text-info"><i class="fas fa-angle-right"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Recent Alerts
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{ alerts|length }}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-bell fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex align-items-center justify-content-between"
+        >
+          <a
+            href="{{ url_for('manage_alerts') }}"
+            class="small text-warning stretched-link"
+            >View All Alerts</a
+          >
+          <div class="small text-warning">
+            <i class="fas fa-angle-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">
+            Recent Disaster Reports
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            {% if reports %}
+            <table
+              class="table table-bordered"
+              id="recentReportsTable"
+              width="100%"
+              cellspacing="0"
+            >
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Location</th>
+                  <th>Type</th>
+                  <th>Severity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for report_id, report_data in
+                reports|sort(attribute=1.timestamp, reverse=True) %}
+                <tr>
+                  <td>{{ report_data.timestamp | datetimeformat }}</td>
+                  <td>{{ report_data.location }}</td>
+                  <td>{{ report_data.help_type | capitalize }}</td>
+                  <td>{{ report_data.severity }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p>No recent disaster reports.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow">
+        <div class="card-header bg-warning text-white">
+          <h5 class="mb-0">Resource Summary</h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6">
+              <h3>
+                {% set total_quantity = resources.values() |
+                map(attribute='quantity') | list %} {{ total_quantity | sum if
+                total_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Total Items</p>
+            </div>
+            <div class="col-6">
+              <h3>
+                {% set medical_quantity = resources.values() |
+                selectattr('type', 'equalto', 'medical') |
+                map(attribute='quantity') | list %} {{ medical_quantity | sum if
+                medical_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Medical</p>
+            </div>
+          </div>
+          <div class="row text-center mt-3">
+            <div class="col-6">
+              <h3>
+                {% set food_quantity = resources.values() | selectattr('type',
+                'equalto', 'food') | map(attribute='quantity') | list %} {{
+                food_quantity | sum if food_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Food</p>
+            </div>
+            <div class="col-6">
+              <h3>
+                {% set water_quantity = resources.values() | selectattr('type',
+                'equalto', 'water') | map(attribute='quantity') | list %} {{
+                water_quantity | sum if water_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Water</p>
+            </div>
+          </div>
+          <div class="row text-center mt-3">
+            <div class="col-6">
+              <h3>
+                {% set shelter_quantity = resources.values() |
+                selectattr('type', 'equalto', 'shelter') |
+                map(attribute='quantity') | list %} {{ shelter_quantity | sum if
+                shelter_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Shelter</p>
+            </div>
+            <div class="col-6">
+              <h3>
+                {% set equipment_quantity = resources.values() |
+                selectattr('type', 'equalto', 'equipment') |
+                map(attribute='quantity') | list %} {{ equipment_quantity | sum
+                if equipment_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Equipment</p>
+            </div>
+          </div>
+          <div class="row text-center mt-3">
+            <div class="col-6">
+              <h3>
+                {% set vehicle_quantity = resources.values() |
+                selectattr('type', 'equalto', 'vehicle') |
+                map(attribute='quantity') | list %} {{ vehicle_quantity | sum if
+                vehicle_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Vehicles</p>
+            </div>
+            <div class="col-6">
+              <h3>
+                {% set other_quantity = resources.values() | selectattr('type',
+                'equalto', 'other') | map(attribute='quantity') | list %} {{
+                other_quantity | sum if other_quantity else 0 }}
+              </h3>
+              <p class="text-muted">Other</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+</div>
